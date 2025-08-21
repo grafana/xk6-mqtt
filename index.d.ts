@@ -19,6 +19,14 @@
  * @module mqtt
  *
  * @example Hello World
+ * Comparing HTTP-based tests to MQTT ones, you’ll find differences in both structure and inner workings.
+ * The primary difference is that instead of continuously looping the main function
+ * (`export default function() { ... }`) over and over, each VU is now runs an asynchronous event loop.
+ *
+ * When the MQTT connection is created, the `connect` handler function will be immediately called,
+ * all code inside it will be executed (usually code to set up other event handlers),
+ * and then blocked until the MQTT connection is closed (by the remote host or by using `client.end()`).
+ *
  * ```javascript
  * import { Client } from "k6/x/mqtt";
  *
@@ -114,6 +122,7 @@ export declare interface Will {
 /**
  * Base interface for objects that can have tags.
  * Tags are key-value pairs used for metrics and logging.
+ * The keys are names of tags and the values are tag values.
  */
 export declare interface HasTags {
   /** Optional tags for metrics and logging. */

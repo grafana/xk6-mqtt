@@ -13,13 +13,19 @@ The [xk6-mqtt API](https://mqtt.x.k6.io) is intentionally designed to feel famil
 
 ## Example
 
+Comparing HTTP-based tests to MQTT ones, you’ll find differences in both structure and inner workings. The primary difference is that instead of continuously looping the main function (`export default function() { ... }`) over and over, each VU is now runs an asynchronous event loop.
+
+When the MQTT connection is created, the `connect` handler function will be immediately called, all code inside it will be executed (usually code to set up other event handlers), and then blocked until the MQTT connection is closed (by the remote host or by using `client.end()`).
+
+The basic structure of a MQTT test looks like this:
+
 ```javascript file=examples/hello.js
 import { Client } from "k6/x/mqtt";
 
 export default function () {
   const client = new Client()
 
-  client.on("connect", async () => {
+  client.on("connect", () => {
     console.log("Connected to MQTT broker")
     client.subscribe("greeting")
     client.publish("greeting", "Hello MQTT!")
@@ -51,7 +57,7 @@ import { Client } from "k6/x/mqtt";
 export default function () {
   const client = new Client()
 
-  client.on("connect", async () => {
+  client.on("connect", () => {
     console.log("Connected to MQTT broker")
     client.subscribe("probe")
 
