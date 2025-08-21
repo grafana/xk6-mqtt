@@ -3,7 +3,7 @@ import { Client } from "k6/x/mqtt";
 export default function () {
   const client = new Client()
 
-  client.on("connect", async () => {
+  client.on("connect", () => {
     console.log("Connected to MQTT broker")
     client.subscribe("greeting")
     client.publish("greeting", "Hello MQTT!")
