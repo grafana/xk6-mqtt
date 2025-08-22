@@ -190,5 +190,9 @@ func (c *client) newPahoClient() paho.Client {
 	opts.SetOnConnectHandler(c.connectHandler)
 	opts.SetReconnectingHandler(c.reconnectHandler)
 
+	if conf := c.vu.State().TLSConfig; conf != nil {
+		opts.SetTLSConfig(conf)
+	}
+
 	return paho.NewClient(opts)
 }
