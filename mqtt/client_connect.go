@@ -19,6 +19,7 @@ var (
 type connectOptions struct {
 	Keepalive      sobek.Value
 	ConnectTimeout sobek.Value
+	CleanSession   bool
 	Servers        []string
 	Tags           map[string]string
 }
@@ -30,6 +31,10 @@ func (co *connectOptions) toPaho(opts *paho.ClientOptions) {
 
 	if sobek.IsNumber(co.ConnectTimeout) && co.ConnectTimeout.ToInteger() >= 0 {
 		opts.SetConnectTimeout(time.Millisecond * time.Duration(co.ConnectTimeout.ToInteger()))
+	}
+
+	if co.CleanSession {
+		opts.SetCleanSession(true)
 	}
 
 	for _, server := range co.Servers {

@@ -153,7 +153,7 @@ export declare interface ClientOptions extends HasTags {
   /** The password required by your broker, if any. */
   password?: string;
   /** Provider for MQTT client credentials. */
-  credentialsProvider?: CredentialsProvider;
+  credentials_provider?: CredentialsProvider;
   /** Last Will and Testament message. */
   will?: Will;
 }
@@ -165,7 +165,9 @@ export declare interface ConnectOptions extends HasTags {
   /** Keep-alive interval in seconds (default: 60) */
   keepalive?: number;
   /** Connection timeout in milliseconds (default: 30000) */
-  connectTimeout?: number;
+  connect_timeout?: number;
+  /** By setting this flag, you are indicating that no messages saved by the broker for this client should be delivered. */
+  clean_session?: boolean;
   /** Array of broker URLs to connect to (for failover) */
   servers?: string[];
 }
