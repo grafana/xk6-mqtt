@@ -19,13 +19,31 @@ import (
 // It is used by tests to connect to the embedded broker.
 const EnvBrokerAddress = "MQTT_BROKER_ADDRESS"
 
-// Setup initializes the embedded MQTT broker for testing purposes.
-func Setup() *mochi.Server {
-	log.Print("Setting up embedded MQTT broker for tests")
+// New creates a new embedded MQTT broker.
+func New(open bool) *mochi.Server {
+	log.Print("Creating new embedded MQTT broker")
 
 	broker := mochi.New(&mochi.Options{InlineClient: true})
 
-	if err := broker.AddHook(new(auth.AllowHook), nil); err != nil {
+	var (
+		hook mochi.Hook = &auth.AllowHook{}
+		opts *auth.Options
+	)
+
+	if !open {
+		opts = &auth.Options{
+			Ledger: &auth.Ledger{
+				ACL: auth.ACLRules{auth.ACLRule{Remote: "*"}},
+				Auth: auth.AuthRules{
+					auth.AuthRule{Username: "test-user", Password: "test-password", Allow: true},
+				},
+			},
+		}
+
+		hook = new(auth.Hook)
+	}
+
+	if err := broker.AddHook(hook, opts); err != nil {
 		log.Fatal("Failed to add auth hook:", err)
 	}
 
@@ -63,12 +81,26 @@ func Setup() *mochi.Server {
 		log.Fatal("Failed to get assigned port for embedded broker")
 	}
 
-	address := "mqtt://" + net.JoinHostPort(brokerHost, tcpPort)
+	must(broker.Subscribe("test/#", 0, echoHandler(broker)), "Failed to subscribe to echo topic")
+
+	return broker
+}
+
+// Setup initializes the embedded MQTT broker for testing purposes.
+func Setup() *mochi.Server {
+	log.Print("Setting up embedded MQTT broker for tests")
+
+	broker := New(true)
+
+	tcpListener, ok := broker.Listeners.Get("tcp")
+	if !ok {
+		log.Fatal("Failed to get TCP listener")
+	}
+
+	address := "mqtt://" + tcpListener.Address()
 
 	must(os.Setenv(EnvBrokerAddress, address), "Failed to set environment variable for MQTT broker address")
 	log.Println("MQTT broker address set to", address)
-
-	must(broker.Subscribe("test/#", 0, echoHandler(broker)), "Failed to subscribe to echo topic")
 
 	return broker
 }

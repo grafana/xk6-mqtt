@@ -11,14 +11,35 @@ import (
 	"go.k6.io/k6/js/promises"
 )
 
-var errNotConnected = errors.New("not connected")
+var (
+	errNotConnected = errors.New("not connected")
+	errCredProvider = errors.New("credentials provider failed")
+)
 
 type connectOptions struct {
-	ClientId       sobek.Value //nolint:revive
 	Keepalive      sobek.Value
 	ConnectTimeout sobek.Value
+	CleanSession   bool
 	Servers        []string
 	Tags           map[string]string
+}
+
+func (co *connectOptions) toPaho(opts *paho.ClientOptions) {
+	if sobek.IsNumber(co.Keepalive) {
+		opts.SetKeepAlive(time.Second * time.Duration(co.Keepalive.ToInteger()))
+	}
+
+	if sobek.IsNumber(co.ConnectTimeout) && co.ConnectTimeout.ToInteger() >= 0 {
+		opts.SetConnectTimeout(time.Millisecond * time.Duration(co.ConnectTimeout.ToInteger()))
+	}
+
+	if co.CleanSession {
+		opts.SetCleanSession(true)
+	}
+
+	for _, server := range co.Servers {
+		opts.AddBroker(server)
+	}
 }
 
 func (c *client) connect(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) error {
@@ -162,32 +183,20 @@ func (c *client) disconnect() {
 func (c *client) newPahoClient() paho.Client {
 	opts := paho.NewClientOptions()
 
+	c.clientOpts.toPaho(opts, c.vu.Runtime())
+
 	if len(c.url) != 0 {
 		opts.AddBroker(c.url)
 	}
 
-	for _, server := range c.connOpts.Servers {
-		opts.AddBroker(server)
-	}
+	c.connOpts.toPaho(opts)
 
 	opts.SetDefaultPublishHandler(c.messageHandler)
 	opts.SetOnConnectHandler(c.connectHandler)
 	opts.SetReconnectingHandler(c.reconnectHandler)
 
-	if sobek.IsString(c.connOpts.ClientId) {
-		opts.SetClientID(c.connOpts.ClientId.String())
-	}
-
-	if sobek.IsNumber(c.connOpts.Keepalive) {
-		opts.SetKeepAlive(time.Second * time.Duration(c.connOpts.Keepalive.ToInteger()))
-	}
-
-	if sobek.IsNumber(c.connOpts.ConnectTimeout) && c.connOpts.ConnectTimeout.ToInteger() >= 0 {
-		opts.SetConnectTimeout(time.Millisecond * time.Duration(c.connOpts.ConnectTimeout.ToInteger()))
-	}
-
-	if c.clientOpts.Will != nil {
-		opts.SetWill(c.clientOpts.Will.Topic, c.clientOpts.Will.Payload, c.clientOpts.Will.Qos, c.clientOpts.Will.Retain)
+	if conf := c.vu.State().TLSConfig; conf != nil {
+		opts.SetTLSConfig(conf)
 	}
 
 	return paho.NewClient(opts)

@@ -21,6 +21,12 @@ linters:
 
     # The k6 extension API is not a general-purpose API.
     - testpackage
+
+    # Would require rewriting a lot of code.
+    - noinlineerr
+
+    # Deprecated
+    - wsl
   settings:
     depguard:
       rules:

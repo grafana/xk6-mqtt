@@ -83,6 +83,34 @@ export default function () {
 }
 ```
 
+## SSL/TLS
+
+**xk6-mqtt** does not provide its own custom TLS configuration options. Instead, it relies on the standard [k6 TLS configuration](https://grafana.com/docs/k6/latest/using-k6/protocols/ssl-tls/) for all SSL/TLS settings. This means you should configure certificates, verification, and other TLS-related options using the same environment variables and configuration files as you would for any other k6 protocol. This approach ensures consistency across your k6 tests and leverages the robust, well-documented TLS support already present in k6.
+
+## Supported Broker URL Schemas
+
+**xk6-mqtt** supports connecting to MQTT brokers using the following URL schemas:
+
+- **mqtt://** — Plain TCP connection (no encryption)
+- **mqtts://** — Secure connection over SSL/TLS (recommended for production)
+- **tcp://** — Alias for `mqtt://`, plain TCP connection
+- **ssl://** — Alias for `mqtts://`, secure SSL/TLS connection
+- **tls://** — Alias for `mqtts://`, secure SSL/TLS connection
+- **ws://** — MQTT over WebSocket (if supported by the broker)
+- **wss://** — MQTT over secure WebSocket (if supported by the broker)
+
+Specify the broker URL using one of these schemas when calling `client.connect()`.  
+For example:
+
+```javascript
+client.connect("mqtt://broker.example.com:1883")
+client.connect("mqtts://broker.example.com:8883")
+client.connect("ws://broker.example.com:8083/mqtt")
+client.connect("wss://broker.example.com:8084/mqtt")
+```
+
+If you omit the schema in the broker URL, `mqtt://` (plain TCP) is used as the default.
+
 ## Quick Start
 
 1. **Build a custom k6 binary with xk6-mqtt**  
@@ -119,7 +147,6 @@ We welcome contributions! Please see the [Contributing Guidelines](CONTRIBUTING.
 
 **xk6-mqtt** is in an early stage of development but is already usable for many MQTT load testing scenarios. Please note that some features are not yet implemented:
 
-- **Authentication**: Neither basic username/password nor TLS-based authentication is currently supported.
 - **Error event handling**: The `error` event handler is not yet implemented.
 
 We are actively working to add these features and improve the extension. Feedback and contributions are welcome!

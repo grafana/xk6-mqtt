@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"fmt"
 	"sync"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -17,9 +18,63 @@ type will struct {
 	Retain  bool
 }
 
+type credentials struct {
+	Username string
+	Password string
+}
+
 type clientOptions struct {
-	Will *will
-	Tags map[string]string
+	ClientId            sobek.Value //nolint:revive
+	Username            sobek.Value
+	Password            sobek.Value
+	CredentialsProvider sobek.Callable
+	Will                *will
+	Tags                map[string]string
+}
+
+func (co *clientOptions) toPaho(opts *paho.ClientOptions, runtime *sobek.Runtime) {
+	if sobek.IsString(co.ClientId) {
+		opts.SetClientID(co.ClientId.String())
+	}
+
+	if sobek.IsString(co.Username) {
+		opts.SetUsername(co.Username.String())
+	}
+
+	if sobek.IsString(co.Password) {
+		opts.SetPassword(co.Password.String())
+	}
+
+	cp := co.getCredentialsProvider(runtime)
+	if cp != nil {
+		opts.SetCredentialsProvider(cp)
+	}
+
+	if co.Will != nil {
+		opts.SetWill(co.Will.Topic, co.Will.Payload, co.Will.Qos, co.Will.Retain)
+	}
+}
+
+func (co *clientOptions) getCredentialsProvider(runtime *sobek.Runtime) paho.CredentialsProvider {
+	if co.CredentialsProvider == nil {
+		return nil
+	}
+
+	return func() (string, string) {
+		credsValue, err := co.CredentialsProvider(sobek.Undefined())
+		if err != nil {
+			common.Throw(runtime, fmt.Errorf("%w: %s", errCredProvider, err.Error()))
+		}
+
+		var creds credentials
+
+		err = runtime.ExportTo(credsValue, &creds)
+		if err != nil {
+			common.Throw(runtime, fmt.Errorf("%w: %s", errCredProvider, err.Error()))
+		}
+
+		return creds.Username, creds.Password
+	}
 }
 
 type client struct {
