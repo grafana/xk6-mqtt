@@ -86,7 +86,7 @@ type client struct {
 	clientOpts *clientOptions
 	connOpts   *connectOptions
 
-	handlers map[string]sobek.Callable
+	handlers sync.Map
 
 	vu       modules.VU
 	callChan chan func() error
@@ -100,7 +100,6 @@ type client struct {
 func newClient(log logrus.FieldLogger, vu modules.VU, metrics *mqttMetrics) *client {
 	c := new(client)
 	c.log = log
-	c.handlers = make(map[string]sobek.Callable)
 	c.vu = vu
 	c.callChan = make(chan func() error)
 	c.stop = make(chan struct{})

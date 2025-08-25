@@ -16,7 +16,11 @@ type unsubscribeOptions struct {
 func (c *client) unsubscribe(topic sobek.Value, opts *unsubscribeOptions) error {
 	topics, err := c.unsubscribePrepare(topic)
 	if err != nil {
-		return err
+		if e := c.handleError(err, "unsubscribe", opts.Tags, "topic", topic.String()); e != nil {
+			return e
+		}
+
+		return nil
 	}
 
 	return c.unsubscribeExecute(topics, opts)
@@ -66,9 +70,11 @@ func (c *client) unsubscribeExecute(topics []string, opts *unsubscribeOptions) e
 
 	for t, token := range tokens {
 		if token.Wait() && token.Error() != nil {
-			c.addErrorMetrics(token.Error(), "unsubscribe", opts.Tags, "topic", t)
+			if err := c.handleError(token.Error(), "unsubscribe", opts.Tags, "topic", t); err != nil {
+				return err
+			}
 
-			return token.Error()
+			return nil
 		}
 
 		c.addCallMetrics("unsubscribe", opts.Tags, "topic", t)

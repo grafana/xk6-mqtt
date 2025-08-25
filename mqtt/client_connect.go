@@ -45,7 +45,11 @@ func (co *connectOptions) toPaho(opts *paho.ClientOptions) {
 func (c *client) connect(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) error {
 	err := c.connectPrepare(urlOrOpts, optsOrEmpty)
 	if err != nil {
-		return err
+		if e := c.handleError(err, "connect", c.connOpts.Tags, "url", c.url); e != nil {
+			return e
+		}
+
+		return nil
 	}
 
 	return c.connectExecute()
@@ -153,9 +157,11 @@ func (c *client) connectExecute() error {
 	c.pahoClient = c.newPahoClient()
 
 	if token := c.pahoClient.Connect(); token.Wait() && token.Error() != nil {
-		c.addErrorMetrics(token.Error(), "connect", c.connOpts.Tags, "url", c.url)
+		if err := c.handleError(token.Error(), "connect", c.connOpts.Tags, "url", c.url); err != nil {
+			return err
+		}
 
-		return token.Error()
+		return nil
 	}
 
 	c.addCallMetrics("connect", nil)
