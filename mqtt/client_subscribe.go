@@ -18,7 +18,11 @@ type subscribeOptions struct {
 func (c *client) subscribe(topic sobek.Value, opts *subscribeOptions) error {
 	topics, o, err := c.subscribePrepare(topic, opts)
 	if err != nil {
-		return err
+		if e := c.handleError(err, "subscribe", o.Tags, "topic", topic.String()); e != nil {
+			return e
+		}
+
+		return nil
 	}
 
 	return c.subscribeExecute(topics, o)
@@ -87,9 +91,11 @@ func (c *client) subscribeExecute(topics map[string]byte, opts *subscribeOptions
 
 	for t, token := range tokens {
 		if token.Wait() && token.Error() != nil {
-			c.addErrorMetrics(token.Error(), "subscribe", opts.Tags, "topic", t)
+			if err := c.handleError(token.Error(), "subscribe", opts.Tags, "topic", t); err != nil {
+				return err
+			}
 
-			return token.Error()
+			return nil
 		}
 
 		c.addCallMetrics("subscribe", opts.Tags, "topic", t)

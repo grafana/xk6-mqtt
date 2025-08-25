@@ -57,9 +57,9 @@ import { Client } from "k6/x/mqtt";
 export default function () {
   const client = new Client()
 
-  client.on("connect", () => {
+  client.on("connect", async () => {
     console.log("Connected to MQTT broker")
-    client.subscribe("probe")
+    await client.subscribeAsync("probe")
 
     const intervalId = setInterval(() => {
       client.publish("probe", "ping MQTT!")
@@ -83,6 +83,20 @@ export default function () {
 }
 ```
 
+## Event-Driven Usage
+ 
+Register event handlers for connection lifecycle and message events using `.on()` method:
+ 
+ | Event        | Description
+ |--------------|------------------------------------------------------------------
+ | `connect`  | Triggered when the client successfully connects to the broker.
+ | `message`  | Triggered when a message is received on a subscribed topic.
+ | `end`      | Triggered when the client disconnects from the broker.
+ | `reconnect`| Triggered when the client attempts to reconnect.
+ | `error`    | Triggered when an error occurs.
+
+All event handlers are executed in the context of the k6 VU event loop.
+
 ## SSL/TLS
 
 **xk6-mqtt** does not provide its own custom TLS configuration options. Instead, it relies on the standard [k6 TLS configuration](https://grafana.com/docs/k6/latest/using-k6/protocols/ssl-tls/) for all SSL/TLS settings. This means you should configure certificates, verification, and other TLS-related options using the same environment variables and configuration files as you would for any other k6 protocol. This approach ensures consistency across your k6 tests and leverages the robust, well-documented TLS support already present in k6.
@@ -91,13 +105,15 @@ export default function () {
 
 **xk6-mqtt** supports connecting to MQTT brokers using the following URL schemas:
 
-- **mqtt://** — Plain TCP connection (no encryption)
-- **mqtts://** — Secure connection over SSL/TLS (recommended for production)
-- **tcp://** — Alias for `mqtt://`, plain TCP connection
-- **ssl://** — Alias for `mqtts://`, secure SSL/TLS connection
-- **tls://** — Alias for `mqtts://`, secure SSL/TLS connection
-- **ws://** — MQTT over WebSocket (if supported by the broker)
-- **wss://** — MQTT over secure WebSocket (if supported by the broker)
+| Schema      | Description
+|-------------|---------------------------------------------------------
+| `mqtt://`   | Plain TCP connection (no encryption)
+| `mqtts://`  | Secure connection over SSL/TLS (recommended for production)
+| `tcp://`    | Alias for `mqtt://`, plain TCP connection
+| `ssl://`    | Alias for `mqtts://`, secure SSL/TLS connection
+| `tls://`    | Alias for `mqtts://`, secure SSL/TLS connection
+| `ws://`     | MQTT over WebSocket (if supported by the broker)
+| `wss://`    | MQTT over secure WebSocket (if supported by the broker)
 
 Specify the broker URL using one of these schemas when calling `client.connect()`.  
 For example:
@@ -145,8 +161,4 @@ We welcome contributions! Please see the [Contributing Guidelines](CONTRIBUTING.
 
 ## Status
 
-**xk6-mqtt** is in an early stage of development but is already usable for many MQTT load testing scenarios. Please note that some features are not yet implemented:
-
-- **Error event handling**: The `error` event handler is not yet implemented.
-
-We are actively working to add these features and improve the extension. Feedback and contributions are welcome!
+**xk6-mqtt** is in an early stage of development but is already usable for many MQTT load testing scenarios. We are actively working to improve the extension. Feedback and contributions are welcome!

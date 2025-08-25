@@ -22,7 +22,11 @@ type publishOptions struct {
 func (c *client) publish(topic string, message sobek.Value, opts *publishOptions) error {
 	topic, data, opts, err := c.publishPrepare(topic, message, opts)
 	if err != nil {
-		return err
+		if err := c.handleError(err, "publish", opts.Tags, "topic", topic); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	return c.publishExecute(topic, data, opts)
@@ -77,9 +81,11 @@ func (c *client) publishExecute(topic string, message []byte, opts *publishOptio
 
 	token := c.pahoClient.Publish(topic, opts.Qos, opts.Retain, message)
 	if token.Wait() && token.Error() != nil {
-		c.addErrorMetrics(token.Error(), "publish", opts.Tags, "topic", topic)
+		if err := c.handleError(token.Error(), "publish", opts.Tags, "topic", topic); err != nil {
+			return err
+		}
 
-		return token.Error()
+		return nil
 	}
 
 	now := time.Now()

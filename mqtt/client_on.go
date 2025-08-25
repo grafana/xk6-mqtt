@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"fmt"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -24,19 +25,24 @@ func (c *client) on(event string, handler sobek.Callable) {
 		return
 	}
 
-	if _, ok := c.handlers[event]; ok {
+	if _, ok := c.handlers.Load(event); ok {
 		c.log.WithField("event", event).Warn("Event handler already registered, overriding")
 	}
 
 	c.log.WithField("event", event).Debug("Event handler registered")
 
-	c.handlers[event] = handler
+	c.handlers.Store(event, handler)
 }
 
-func (c *client) fire(event string, args ...sobek.Value) {
-	fn, ok := c.handlers[event]
+func (c *client) fire(event string, args ...sobek.Value) bool {
+	f, ok := c.handlers.Load(event)
 	if !ok {
-		return
+		return false
+	}
+
+	fn, ok := f.(sobek.Callable)
+	if !ok {
+		return false
 	}
 
 	c.log.WithField("event", event).Debug("Queuing event handler")
@@ -48,6 +54,8 @@ func (c *client) fire(event string, args ...sobek.Value) {
 
 		return err
 	}
+
+	return true
 }
 
 func (c *client) messageHandler(_ paho.Client, msg paho.Message) {
@@ -114,4 +122,37 @@ func (c *client) reconnectHandler(_ paho.Client, _ *paho.ClientOptions) {
 	c.log.Debug("Reconnecting to MQTT broker")
 
 	c.fire("reconnect")
+}
+
+func (c *client) handleError(err error, method string, tags map[string]string, nv ...string) error {
+	c.log.WithField("error", err).WithField("method", method).Error("MQTT error occurred")
+
+	c.addErrorMetrics(method, tags, nv...)
+
+	wrapped := newMQTTError(err, method)
+
+	if c.fire("error", c.vu.Runtime().ToValue(wrapped)) {
+		return nil
+	}
+
+	return wrapped
+}
+
+// MQTTError represents an error that occurred during an MQTT operation.
+type MQTTError struct { //nolint:revive
+	Name    string
+	Method  string
+	Message string
+}
+
+func newMQTTError(err error, method string) *MQTTError {
+	return &MQTTError{
+		Name:    "MQTTError",
+		Method:  method,
+		Message: err.Error(),
+	}
+}
+
+func (e *MQTTError) Error() string {
+	return fmt.Sprintf("MQTT error during %s: %v", e.Method, e.Message)
 }

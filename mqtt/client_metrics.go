@@ -40,14 +40,16 @@ func (c *client) tags() *metrics.TagSet {
 
 	tags = tags.With("proto", "MQTT/3.1.1")
 
-	opts := c.pahoClient.OptionsReader()
+	if c.pahoClient != nil {
+		opts := c.pahoClient.OptionsReader()
 
-	if cid := opts.ClientID(); cid != "" {
-		tags = tags.With("client_id", cid)
-	}
+		if cid := opts.ClientID(); cid != "" {
+			tags = tags.With("client_id", cid)
+		}
 
-	if url := opts.Servers()[0]; url != nil {
-		tags = tags.With("url", url.String())
+		if url := opts.Servers()[0]; url != nil {
+			tags = tags.With("url", url.String())
+		}
 	}
 
 	tags = addToTagSet(tags, c.clientOpts.Tags)
@@ -71,9 +73,7 @@ func (c *client) tagsForMethod(method string, dict map[string]string, nv ...stri
 	return tags
 }
 
-func (c *client) addErrorMetrics(err error, method string, tags map[string]string, nv ...string) {
-	c.log.WithError(err).Error("Error during " + method)
-
+func (c *client) addErrorMetrics(method string, tags map[string]string, nv ...string) {
 	metrics.PushIfNotDone(c.vu.Context(), c.vu.State().Samples, metrics.Samples{
 		metrics.Sample{
 			TimeSeries: metrics.TimeSeries{
