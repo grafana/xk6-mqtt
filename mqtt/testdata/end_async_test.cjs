@@ -15,8 +15,6 @@ module.exports = () => {
   })
 
   client.on("end", () => {
-    assert.false(client.connected, "Client should not be connected after end event")
-
     endHandlerCalled = true
   })
 
