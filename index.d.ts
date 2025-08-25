@@ -66,7 +66,7 @@
  *
  *   client.on("connect", async () => {
  *     console.log("Connected to MQTT broker")
- *     client.subscribe("probe")
+ *     await client.subscribeAsync("probe")
  *
  *     const intervalId = setInterval(() => {
  *       client.publish("probe", "ping MQTT!")
@@ -213,16 +213,57 @@ export declare interface PublishOptions extends HasTags {
 export declare type StringOrArrayBuffer = string | ArrayBuffer;
 
 /**
- * MQTT client for connecting to brokers and managing MQTT operations
+ * MQTT client for connecting to brokers and managing MQTT operations.
  *
- * @example
+ * The `Client` class provides a high-level, event-driven interface for interacting with MQTT brokers.
+ * It supports both synchronous and asynchronous operations for connecting, subscribing, publishing,
+ * and unsubscribing, and is designed to be familiar to users of [MQTT.js](https://github.com/mqttjs/MQTT.js).
+ *
+ * **Event-Driven Usage**
+ *
+ * Register event handlers for connection lifecycle and message events using `.on()` method:
+ *
+ * | Event        | Description
+ * |--------------|------------------------------------------------------------------
+ * | `connect`  | Triggered when the client successfully connects to the broker.
+ * | `message`  | Triggered when a message is received on a subscribed topic.
+ * | `end`      | Triggered when the client disconnects from the broker.
+ * | `reconnect`| Triggered when the client attempts to reconnect.
+ * | `error`    | Triggered when an error occurs.
+ *
+ * All event handlers are executed in the context of the k6 VU event loop.
+ *
+ * **SSL/TLS**
+ *
+ * **xk6-mqtt** does not provide its own custom TLS configuration options.
+ * Instead, it relies on the standard [k6 TLS configuration](https://grafana.com/docs/k6/latest/using-k6/protocols/ssl-tls/) for all SSL/TLS settings.
+ * This means you should configure certificates, verification, and other TLS-related options using the same environment variables and configuration files as you would for any other k6 protocol.
+ * This approach ensures consistency across your k6 tests and leverages the robust, well-documented TLS support already present in k6.
+ *
+ * **Supported Broker URL Schemas**
+ *
+ * **xk6-mqtt** supports connecting to MQTT brokers using the following URL schemas:
+ *
+ * | Schema      | Description
+ * |-------------|---------------------------------------------------------
+ * | `mqtt://`   | Plain TCP connection (no encryption)
+ * | `mqtts://`  | Secure connection over SSL/TLS (recommended for production)
+ * | `tcp://`    | Alias for `mqtt://`, plain TCP connection
+ * | `ssl://`    | Alias for `mqtts://`, secure SSL/TLS connection
+ * | `tls://`    | Alias for `mqtts://`, secure SSL/TLS connection
+ * | `ws://`     | MQTT over WebSocket (if supported by the broker)
+ * | `wss://`    | MQTT over secure WebSocket (if supported by the broker)
+ *
+ * If you omit the schema in the broker URL, `mqtt://` (plain TCP) is used as the default.
+ *
+ * @example Basic Usage
  * ```javascript
  * import { Client } from "k6/x/mqtt";
  *
  * export default function () {
  *   const client = new Client()
  *
- *   client.on("connect", async () => {
+ *   client.on("connect", () => {
  *     console.log("Connected to MQTT broker")
  *     client.subscribe("greeting")
  *
@@ -354,5 +395,17 @@ export declare class Client {
    * Listen for errors.
    * @param listener Callback for error event.
    */
-  on(event: "error", listener: (error: Error) => void): void;
+  on(event: "error", listener: (error: MQTTError) => void): void;
+}
+
+/**
+ * Represents an error that occurred during an MQTT operation.
+ */
+export declare interface MQTTError {
+  /** The error name. */
+  name: "MQTTError"
+  /** The error message. */
+  message: string;
+  /** The method where the error occurred. */
+  method: string;
 }

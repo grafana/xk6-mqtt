@@ -3,9 +3,9 @@ import { Client } from "k6/x/mqtt";
 export default function () {
   const client = new Client()
 
-  client.on("connect", () => {
+  client.on("connect", async () => {
     console.log("Connected to MQTT broker")
-    client.subscribe("probe")
+    await client.subscribeAsync("probe")
 
     const intervalId = setInterval(() => {
       client.publish("probe", "ping MQTT!")
