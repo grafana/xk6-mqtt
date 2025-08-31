@@ -7,7 +7,7 @@ require (
 	github.com/grafana/sobek v0.0.0-20250723111835-dd8a13f0d439
 	github.com/mstoykov/k6-taskqueue-lib v0.1.3
 	github.com/sirupsen/logrus v1.9.3
-	go.k6.io/k6 v1.2.2
+	go.k6.io/k6 v1.2.3
 )
 
 // test dependencies
