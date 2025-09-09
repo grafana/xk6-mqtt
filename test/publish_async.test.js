@@ -8,12 +8,10 @@ export const options = {
     handler_called: ["count==2"],
     mqtt_calls: ["count==7"],
     mqtt_errors: ["count==0"],
-    mqtt_message_sent: ["count==2"],
-    mqtt_message_received: ["count==2"],
-    mqtt_data_sent: ["count==30"], // "Hello, Async MQTT!" + "Hello, MQTT!"
-    mqtt_data_received: ["count==30"],
+    mqtt_messages_sent: ["count==2"],
+    mqtt_messages_received: ["count==2"],
     data_received: ["count==30"],
-    data_sent: ["count==30"],
+    data_sent: ["count==30"], // "Hello, Async MQTT!" + "Hello, MQTT!"
   },
 }
 

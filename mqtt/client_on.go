@@ -83,19 +83,11 @@ func (c *client) messageHandler(_ paho.Client, msg paho.Message) {
 		},
 		metrics.Sample{
 			TimeSeries: metrics.TimeSeries{
-				Metric: c.metrics.mqttMessageReceived,
+				Metric: c.metrics.mqttMessagesReceived,
 				Tags:   tags,
 			},
 			Time:  now,
 			Value: float64(1),
-		},
-		metrics.Sample{
-			TimeSeries: metrics.TimeSeries{
-				Metric: c.metrics.mqttDataReceived,
-				Tags:   tags,
-			},
-			Time:  now,
-			Value: bytes,
 		},
 		metrics.Sample{
 			TimeSeries: metrics.TimeSeries{
