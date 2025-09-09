@@ -103,19 +103,11 @@ func (c *client) publishExecute(topic string, message []byte, opts *publishOptio
 		},
 		metrics.Sample{
 			TimeSeries: metrics.TimeSeries{
-				Metric: c.metrics.mqttMessageSent,
+				Metric: c.metrics.mqttMessagesSent,
 				Tags:   tags,
 			},
 			Time:  now,
 			Value: float64(1),
-		},
-		metrics.Sample{
-			TimeSeries: metrics.TimeSeries{
-				Metric: c.metrics.mqttDataSent,
-				Tags:   tags,
-			},
-			Time:  now,
-			Value: bytes,
 		},
 		metrics.Sample{
 			TimeSeries: metrics.TimeSeries{
