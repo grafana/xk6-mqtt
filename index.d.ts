@@ -147,7 +147,7 @@ export declare type CredentialsProvider = () => Credentials;
  */
 export declare interface ClientOptions extends HasTags {
   /** Client identifier (must be unique per broker connection). */
-  clientId?: string;
+  client_id?: string;
   /** The username required by your broker, if any. */
   username?: string;
   /** The password required by your broker, if any. */
