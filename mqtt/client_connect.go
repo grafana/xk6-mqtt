@@ -206,10 +206,12 @@ func (c *client) newPahoClient() paho.Client {
 	if conf := c.vu.State().TLSConfig; conf != nil {
 		// Overriding the NextProtos to avoid talking http2
 		// @see https://github.com/grafana/xk6-mqtt/issues/20
-		var tlsConfig *tls.Config = conf.Clone()
+		tlsConfig := conf.Clone()
+
 		if strings.HasPrefix(c.url, "wss://") {
 			tlsConfig.NextProtos = []string{"http/1.1"}
 		}
+
 		opts.SetTLSConfig(tlsConfig)
 	}
 
