@@ -1,7 +1,6 @@
 package mqtt
 
 import (
-	"crypto/tls"
 	"errors"
 	"fmt"
 	"reflect"
