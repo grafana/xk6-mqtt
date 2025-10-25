@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
@@ -202,7 +203,15 @@ func (c *client) newPahoClient() paho.Client {
 	opts.SetReconnectingHandler(c.reconnectHandler)
 
 	if conf := c.vu.State().TLSConfig; conf != nil {
-		opts.SetTLSConfig(conf)
+		// Overriding the NextProtos to avoid talking http2
+		// @see https://github.com/grafana/xk6-mqtt/issues/20
+		tlsConfig := conf.Clone()
+
+		if strings.HasPrefix(c.url, "wss://") {
+			tlsConfig.NextProtos = []string{"http/1.1"}
+		}
+
+		opts.SetTLSConfig(tlsConfig)
 	}
 
 	return paho.NewClient(opts)
