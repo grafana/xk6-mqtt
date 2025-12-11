@@ -14,7 +14,7 @@ type unsubscribeOptions struct {
 }
 
 func (c *client) unsubscribe(topic sobek.Value, opts *unsubscribeOptions) error {
-	topics, err := c.unsubscribePrepare(topic)
+	topics, opts, err := c.unsubscribePrepare(topic, opts)
 	if err != nil {
 		if e := c.handleError(err, "unsubscribe", opts.Tags, "topic", topic.String()); e != nil {
 			return e
@@ -27,7 +27,7 @@ func (c *client) unsubscribe(topic sobek.Value, opts *unsubscribeOptions) error 
 }
 
 func (c *client) unsubscribeAsync(topic sobek.Value, opts *unsubscribeOptions) (*sobek.Promise, error) {
-	topics, err := c.unsubscribePrepare(topic)
+	topics, opts, err := c.unsubscribePrepare(topic, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -47,12 +47,23 @@ func (c *client) unsubscribeAsync(topic sobek.Value, opts *unsubscribeOptions) (
 	return promise, nil
 }
 
-func (c *client) unsubscribePrepare(topic sobek.Value) ([]string, error) {
+func (c *client) unsubscribePrepare(
+	topic sobek.Value, opts *unsubscribeOptions,
+) ([]string, *unsubscribeOptions, error) {
 	if !c.isConnected() {
-		return nil, errNotConnected
+		return nil, opts, errNotConnected
 	}
 
-	return asUnsubscribeTopics(topic, c.vu.Runtime())
+	if opts == nil {
+		opts = new(unsubscribeOptions)
+	}
+
+	topics, err := asUnsubscribeTopics(topic, c.vu.Runtime())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return topics, opts, nil
 }
 
 func (c *client) unsubscribeExecute(topics []string, opts *unsubscribeOptions) error {
