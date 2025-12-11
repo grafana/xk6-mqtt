@@ -51,7 +51,7 @@ func (c *client) unsubscribePrepare(
 	topic sobek.Value, opts *unsubscribeOptions,
 ) ([]string, *unsubscribeOptions, error) {
 	if !c.isConnected() {
-		return nil, opts, errNotConnected
+		return nil, nil, errNotConnected
 	}
 
 	if opts == nil {
