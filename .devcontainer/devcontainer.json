@@ -1,6 +1,6 @@
 {
   "name": "xk6-mqtt",
-  "image": "mcr.microsoft.com/devcontainers/base:1-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/base:2-bookworm",
   "forwardPorts": [1883],
   "customizations": {
     "vscode": {
