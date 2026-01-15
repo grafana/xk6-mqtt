@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/grafana/sobek v0.0.0-20250723111835-dd8a13f0d439
 	github.com/mstoykov/k6-taskqueue-lib v0.1.3
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	go.k6.io/k6 v1.3.0
 )
 
