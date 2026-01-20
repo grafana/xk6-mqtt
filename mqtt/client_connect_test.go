@@ -1,12 +1,16 @@
 package mqtt
 
 import (
+	"net"
+	"net/url"
 	"os"
 	"testing"
 
 	"github.com/grafana/sobek"
 	"github.com/grafana/xk6-mqtt/internal/broker"
 	"github.com/stretchr/testify/require"
+	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/netext"
 )
 
 func TestClientConnect(t *testing.T) {
@@ -93,4 +97,42 @@ func TestClientConnectAuthenticated(t *testing.T) {
 	runtime.EventLoop.WaitOnRegistered()
 
 	require.True(t, handlerCalled)
+}
+
+func TestClientConnectBlacklisted(t *testing.T) {
+	t.Parallel()
+
+	runtime := newTestRuntime(t)
+	mm := newMqttMetrics(runtime.VU)
+	logger := runtime.VU.InitEnv().Logger
+
+	runtime.MoveToVUContext(newTestVUState(t))
+
+	dialer, ok := runtime.VU.StateField.Dialer.(*netext.Dialer)
+	require.True(t, ok)
+
+	u, err := url.Parse(os.Getenv(broker.EnvBrokerAddress))
+	require.NoError(t, err)
+
+	dialer.Blacklist = []*lib.IPNet{
+		{
+			IPNet: net.IPNet{
+				IP:   net.ParseIP(u.Hostname()),
+				Mask: net.CIDRMask(24, 32),
+			},
+		},
+	}
+
+	client := newTestClient(t, logger, runtime.VU, mm)
+
+	toValue := runtime.VU.Runtime().ToValue
+
+	err = runtime.EventLoop.Start(func() error {
+		return client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil)
+	})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "is in a blacklisted range")
+
+	runtime.EventLoop.WaitOnRegistered()
 }

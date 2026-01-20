@@ -3,6 +3,7 @@ package mqtt
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -149,11 +150,29 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 	return nil
 }
 
+func (c *client) validateAddress(urlstr string) error {
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (c *client) connectExecute() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.log.Debug("Connecting to MQTT broker")
+
+	if err := c.validateAddress(c.url); err != nil {
+		return err
+	}
 
 	c.pahoClient = c.newPahoClient()
 

@@ -3,6 +3,7 @@ package mqtt
 import (
 	_ "embed"
 	"io"
+	"net"
 	"os"
 	"testing"
 
@@ -12,6 +13,8 @@ import (
 	"go.k6.io/k6/js/modules"
 	"go.k6.io/k6/js/modulestest"
 	"go.k6.io/k6/lib"
+	"go.k6.io/k6/lib/netext"
+	"go.k6.io/k6/lib/types"
 	"go.k6.io/k6/metrics"
 )
 
@@ -96,6 +99,23 @@ func newTestVUState(t *testing.T) *lib.State {
 	logger.SetLevel(logrus.InfoLevel)
 	logger.Out = io.Discard
 
+	// Create a real resolver using net.LookupIP
+	resolver := netext.NewResolver(
+		net.LookupIP,
+		0,                   // no caching
+		types.DNSfirst,      // select first IP
+		types.DNSpreferIPv4, // prefer IPv4
+	)
+
+	// Create a dialer with the resolver
+	dialer := netext.NewDialer(net.Dialer{}, resolver)
+
+	ipnet, err := lib.ParseCIDR("127.1.0.0/24")
+
+	require.NoError(t, err)
+
+	dialer.Blacklist = []*lib.IPNet{ipnet}
+
 	return &lib.State{
 		Options: lib.Options{
 			SystemTags: &metrics.DefaultSystemTagSet,
@@ -104,5 +124,6 @@ func newTestVUState(t *testing.T) *lib.State {
 		BuiltinMetrics: metrics.RegisterBuiltinMetrics(registry),
 		Tags:           lib.NewVUStateTags(registry.RootTagSet()),
 		Logger:         logger,
+		Dialer:         dialer,
 	}
 }
