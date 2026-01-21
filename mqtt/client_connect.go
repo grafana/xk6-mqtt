@@ -3,8 +3,10 @@ package mqtt
 import (
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -47,11 +49,7 @@ func (co *connectOptions) toPaho(opts *paho.ClientOptions) {
 func (c *client) connect(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) error {
 	err := c.connectPrepare(urlOrOpts, optsOrEmpty)
 	if err != nil {
-		if e := c.handleError(err, "connect", c.connOpts.Tags, "url", c.url); e != nil {
-			return e
-		}
-
-		return nil
+		return err
 	}
 
 	return c.connectExecute()
@@ -117,13 +115,13 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 	c.disconnect()
 
 	var (
-		url  string
-		opts *connectOptions
+		urlStr string
+		opts   *connectOptions
 	)
 
 	switch urlOrOpts.ExportType() {
 	case reflect.TypeFor[string]():
-		url = urlOrOpts.String()
+		urlStr = urlOrOpts.String()
 		urlOrOpts = optsOrEmpty
 
 	case reflect.TypeFor[map[string]any]():
@@ -144,24 +142,32 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 		opts = new(connectOptions)
 	}
 
-	c.url = url
 	c.connOpts = opts
+
+	urlResolved, err := c.resolveAddress(urlStr)
+	if err != nil {
+		return err
+	}
+
+	c.url = urlResolved
 
 	return nil
 }
 
-func (c *client) validateAddress(urlstr string) error {
-	u, err := url.Parse(urlstr)
+func (c *client) resolveAddress(urlStr string) (string, error) {
+	u, err := url.Parse(urlStr)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	_, _, err = c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
+	ip, port, err := c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	u.Host = net.JoinHostPort(ip.String(), strconv.Itoa(port))
+
+	return u.String(), nil
 }
 
 func (c *client) connectExecute() error {
@@ -169,10 +175,6 @@ func (c *client) connectExecute() error {
 	defer c.mu.Unlock()
 
 	c.log.Debug("Connecting to MQTT broker")
-
-	if err := c.validateAddress(c.url); err != nil {
-		return err
-	}
 
 	c.pahoClient = c.newPahoClient()
 
