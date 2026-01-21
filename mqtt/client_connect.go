@@ -3,10 +3,8 @@ package mqtt
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -144,30 +142,25 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 
 	c.connOpts = opts
 
-	urlResolved, err := c.resolveAddress(urlStr)
+	err := c.validateAddress(urlStr)
 	if err != nil {
 		return err
 	}
 
-	c.url = urlResolved
+	c.url = urlStr
 
 	return nil
 }
 
-func (c *client) resolveAddress(urlStr string) (string, error) {
+func (c *client) validateAddress(urlStr string) error {
 	u, err := url.Parse(urlStr)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	ip, port, err := c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
-	if err != nil {
-		return "", err
-	}
+	_, _, err = c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
 
-	u.Host = net.JoinHostPort(ip.String(), strconv.Itoa(port))
-
-	return u.String(), nil
+	return err
 }
 
 func (c *client) connectExecute() error {
