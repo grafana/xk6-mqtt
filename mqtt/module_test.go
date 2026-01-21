@@ -110,12 +110,6 @@ func newTestVUState(t *testing.T) *lib.State {
 	// Create a dialer with the resolver
 	dialer := netext.NewDialer(net.Dialer{}, resolver)
 
-	ipnet, err := lib.ParseCIDR("127.1.0.0/24")
-
-	require.NoError(t, err)
-
-	dialer.Blacklist = []*lib.IPNet{ipnet}
-
 	return &lib.State{
 		Options: lib.Options{
 			SystemTags: &metrics.DefaultSystemTagSet,
