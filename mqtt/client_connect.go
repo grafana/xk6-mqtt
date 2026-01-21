@@ -3,6 +3,7 @@ package mqtt
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -46,11 +47,7 @@ func (co *connectOptions) toPaho(opts *paho.ClientOptions) {
 func (c *client) connect(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) error {
 	err := c.connectPrepare(urlOrOpts, optsOrEmpty)
 	if err != nil {
-		if e := c.handleError(err, "connect", c.connOpts.Tags, "url", c.url); e != nil {
-			return e
-		}
-
-		return nil
+		return err
 	}
 
 	return c.connectExecute()
@@ -116,13 +113,13 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 	c.disconnect()
 
 	var (
-		url  string
-		opts *connectOptions
+		urlStr string
+		opts   *connectOptions
 	)
 
 	switch urlOrOpts.ExportType() {
 	case reflect.TypeFor[string]():
-		url = urlOrOpts.String()
+		urlStr = urlOrOpts.String()
 		urlOrOpts = optsOrEmpty
 
 	case reflect.TypeFor[map[string]any]():
@@ -143,10 +140,27 @@ func (c *client) connectPrepare(urlOrOpts sobek.Value, optsOrEmpty sobek.Value) 
 		opts = new(connectOptions)
 	}
 
-	c.url = url
 	c.connOpts = opts
 
+	err := c.validateAddress(urlStr)
+	if err != nil {
+		return err
+	}
+
+	c.url = urlStr
+
 	return nil
+}
+
+func (c *client) validateAddress(urlStr string) error {
+	u, err := url.Parse(urlStr)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = c.vu.State().GetAddrResolver().ResolveAddr(u.Host)
+
+	return err
 }
 
 func (c *client) connectExecute() error {
