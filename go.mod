@@ -7,7 +7,7 @@ require (
 	github.com/grafana/sobek v0.0.0-20260429085637-a66d4790012b
 	github.com/mstoykov/k6-taskqueue-lib v0.1.3
 	github.com/sirupsen/logrus v1.9.4
-	go.k6.io/k6 v1.5.0
+	go.k6.io/k6 v1.7.1
 )
 
 // test dependencies
@@ -22,7 +22,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.12.0 // indirect
-	github.com/evanw/esbuild v0.25.10 // indirect
+	github.com/evanw/esbuild v0.27.2 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
