@@ -7,8 +7,8 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/grafana/sobek"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/js/common"
-	"go.k6.io/k6/js/modules"
+	"go.k6.io/k6/v2/js/common"
+	"go.k6.io/k6/v2/js/modules"
 )
 
 type will struct {

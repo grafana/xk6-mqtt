@@ -7,7 +7,7 @@ import (
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/grafana/sobek"
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/metrics"
+	"go.k6.io/k6/v2/metrics"
 )
 
 var events = map[string]struct{}{ //nolint:gochecknoglobals
