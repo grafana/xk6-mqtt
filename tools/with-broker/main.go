@@ -31,7 +31,7 @@ func main() {
 	cmdArgs := os.Args[2:]
 
 	// Create the command
-	cmd := exec.CommandContext(context.TODO(), cmdName, cmdArgs...) //#nosec G204
+	cmd := exec.CommandContext(context.TODO(), cmdName, cmdArgs...) //#nosec G204,G702
 
 	// Connect stdin, stdout, stderr to preserve interactivity
 	cmd.Stdin = os.Stdin

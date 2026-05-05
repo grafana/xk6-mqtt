@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"go.k6.io/k6/js/modules"
+	"go.k6.io/k6/v2/js/modules"
 )
 
 func newTestClient(t *testing.T, logger logrus.FieldLogger, vu modules.VU, mm *mqttMetrics) *client {

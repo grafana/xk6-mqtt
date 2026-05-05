@@ -9,8 +9,8 @@ import (
 	"github.com/grafana/sobek"
 	"github.com/grafana/xk6-mqtt/internal/broker"
 	"github.com/stretchr/testify/require"
-	"go.k6.io/k6/lib"
-	"go.k6.io/k6/lib/netext"
+	"go.k6.io/k6/v2/lib"
+	"go.k6.io/k6/v2/lib/netext"
 )
 
 func TestClientConnect(t *testing.T) {
