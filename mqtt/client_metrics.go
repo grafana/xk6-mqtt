@@ -66,7 +66,7 @@ func (c *client) tagsForMethod(method string, dict map[string]string, nv ...stri
 	tags := c.tags().With("method", method)
 	tags = addToTagSet(tags, dict)
 
-	for i := 0; i < len(nv); i += 2 {
+	for i := 0; i < len(nv)-1; i += 2 {
 		tags = tags.With(nv[i], nv[i+1])
 	}
 
