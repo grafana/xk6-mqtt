@@ -19,5 +19,5 @@ func TestMain(m *testing.M) {
 		log.Fatalf("Error shutting down embedded broker: %v", err)
 	}
 
-	os.Exit(code)
+	os.Exit(code) //nolint:forbidigo // standard TestMain exit
 }

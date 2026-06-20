@@ -99,6 +99,7 @@ func Setup() *mochi.Server {
 
 	address := "mqtt://" + tcpListener.Address()
 
+	//nolint:forbidigo // embedded test broker exports its address via env
 	must(os.Setenv(EnvBrokerAddress, address), "Failed to set environment variable for MQTT broker address")
 	log.Println("MQTT broker address set to", address)
 
