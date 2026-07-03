@@ -18,6 +18,7 @@ import (
 )
 
 func main() {
+	//nolint:forbidigo,gosec // CLI helper tool: argv/stderr access and the usage message are intended
 	if len(os.Args) == 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <command> [args...]\n", os.Args[0])
 		os.Exit(1)
@@ -27,22 +28,23 @@ func main() {
 	server := broker.Setup()
 
 	// Extract command and arguments
-	cmdName := os.Args[1]
-	cmdArgs := os.Args[2:]
+	cmdName := os.Args[1]  //nolint:forbidigo // standalone CLI helper tool; os access is intended
+	cmdArgs := os.Args[2:] //nolint:forbidigo // standalone CLI helper tool; os access is intended
 
 	// Create the command
 	cmd := exec.CommandContext(context.TODO(), cmdName, cmdArgs...) //#nosec G204,G702
 
 	// Connect stdin, stdout, stderr to preserve interactivity
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin   //nolint:forbidigo // standalone CLI helper tool; os access is intended
+	cmd.Stdout = os.Stdout //nolint:forbidigo // standalone CLI helper tool; os access is intended
+	cmd.Stderr = os.Stderr //nolint:forbidigo // standalone CLI helper tool; os access is intended
 
 	// Handle signals gracefully
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Start the command
+	//nolint:forbidigo,gosec // CLI helper tool: stderr access and the error message are intended
 	if err := cmd.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to start command '%s': %v\n", cmdName, err)
 		os.Exit(1)
@@ -59,6 +61,7 @@ func main() {
 
 	// Wait for command to complete
 	err := cmd.Wait()
+	//nolint:forbidigo // CLI helper tool: os.Exit/stderr access is intended
 	if err != nil {
 		var exitError *exec.ExitError
 

@@ -37,7 +37,7 @@ func TestClientConnect(t *testing.T) {
 	})
 
 	err := runtime.EventLoop.Start(func() error {
-		require.NoError(t, client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil))
+		require.NoError(t, client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil)) //nolint:forbidigo // test reads the embedded broker address from env
 
 		return nil
 	})
@@ -111,7 +111,7 @@ func TestClientConnectBlacklisted(t *testing.T) {
 	dialer, ok := runtime.VU.StateField.Dialer.(*netext.Dialer)
 	require.True(t, ok)
 
-	u, err := url.Parse(os.Getenv(broker.EnvBrokerAddress))
+	u, err := url.Parse(os.Getenv(broker.EnvBrokerAddress)) //nolint:forbidigo // test reads the embedded broker address from env
 	require.NoError(t, err)
 
 	dialer.Blacklist = []*lib.IPNet{
@@ -128,7 +128,7 @@ func TestClientConnectBlacklisted(t *testing.T) {
 	toValue := runtime.VU.Runtime().ToValue
 
 	err = runtime.EventLoop.Start(func() error {
-		return client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil)
+		return client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil) //nolint:forbidigo // test reads the embedded broker address from env
 	})
 
 	require.Error(t, err)

@@ -76,7 +76,7 @@ func newTestRuntime(t *testing.T) *modulestest.Runtime {
 	require.NoError(t, err)
 
 	env := map[string]string{
-		broker.EnvBrokerAddress: os.Getenv(broker.EnvBrokerAddress),
+		broker.EnvBrokerAddress: os.Getenv(broker.EnvBrokerAddress), //nolint:forbidigo // test reads the embedded broker address from env
 	}
 
 	require.NoError(t, runtime.VU.Runtime().Set("__ENV", env))

@@ -29,7 +29,7 @@ func TestClientPublish(t *testing.T) {
 	})
 
 	err := runtime.EventLoop.Start(func() error {
-		require.NoError(t, client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil))
+		require.NoError(t, client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil)) //nolint:forbidigo // test reads the embedded broker address from env
 
 		return nil
 	})
