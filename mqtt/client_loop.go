@@ -7,6 +7,7 @@ func (c *client) loop() {
 	tq := taskqueue.New(c.vu.RegisterCallback)
 
 	defer tq.Close()
+	defer c.stopLoop()
 
 	for {
 		select {

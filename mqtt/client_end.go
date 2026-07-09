@@ -10,10 +10,6 @@ type endOptions struct {
 }
 
 func (c *client) end(opts *endOptions) error {
-	if !c.isConnected() {
-		return errNotConnected
-	}
-
 	if opts == nil {
 		opts = new(endOptions)
 	}
@@ -25,15 +21,12 @@ func (c *client) end(opts *endOptions) error {
 	c.addCallMetrics("end", opts.Tags)
 
 	c.disconnect()
+	c.stopLoop()
 
 	return nil
 }
 
 func (c *client) endAsync(opts *endOptions) (*sobek.Promise, error) {
-	if !c.isConnected() {
-		return nil, errNotConnected
-	}
-
 	promise, resolve, reject := promises.New(c.vu)
 
 	go func() {

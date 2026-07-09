@@ -91,6 +91,7 @@ type client struct {
 	vu       modules.VU
 	callChan chan func() error
 	stop     chan struct{}
+	stopOnce sync.Once
 
 	metrics *mqttMetrics
 
@@ -103,10 +104,15 @@ func newClient(log logrus.FieldLogger, vu modules.VU, metrics *mqttMetrics) *cli
 	c.vu = vu
 	c.callChan = make(chan func() error)
 	c.stop = make(chan struct{})
+	c.connOpts = new(connectOptions)
 
 	c.metrics = metrics
 
 	return c
+}
+
+func (c *client) stopLoop() {
+	c.stopOnce.Do(func() { close(c.stop) })
 }
 
 func (m *module) client(call sobek.ConstructorCall) *sobek.Object {

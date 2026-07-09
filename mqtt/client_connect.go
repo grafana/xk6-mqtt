@@ -192,7 +192,7 @@ func (c *client) disconnect() {
 		return
 	}
 
-	c.stop <- struct{}{}
+	c.stopLoop()
 
 	if c.pahoClient.IsConnected() {
 		c.pahoClient.Disconnect(0)
