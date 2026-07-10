@@ -47,7 +47,7 @@ func (c *client) fire(event string, args ...sobek.Value) bool {
 
 	c.log.WithField("event", event).Debug("Queuing event handler")
 
-	c.callChan <- func() error {
+	call := func() error {
 		c.log.WithField("event", event).Debug("Firing event handler")
 
 		_, err := fn(sobek.Undefined(), args...)
@@ -55,7 +55,12 @@ func (c *client) fire(event string, args ...sobek.Value) bool {
 		return err
 	}
 
-	return true
+	select {
+	case c.callChan <- call:
+		return true
+	case <-c.stop:
+		return false
+	}
 }
 
 func (c *client) messageHandler(_ paho.Client, msg paho.Message) {
