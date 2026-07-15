@@ -134,5 +134,7 @@ func TestClientConnectBlacklisted(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "is in a blacklisted range")
 
+	require.NoError(t, client.end(nil))
+
 	runtime.EventLoop.WaitOnRegistered()
 }
