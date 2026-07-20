@@ -47,8 +47,8 @@ func (c *client) tags() *metrics.TagSet {
 			tags = tags.With("client_id", cid)
 		}
 
-		if url := opts.Servers()[0]; url != nil {
-			tags = tags.With("url", url.String())
+		if c.url != "" {
+			tags = tags.With("url", c.url)
 		}
 	}
 

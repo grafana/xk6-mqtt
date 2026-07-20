@@ -138,3 +138,25 @@ func TestClientConnectBlacklisted(t *testing.T) {
 
 	runtime.EventLoop.WaitOnRegistered()
 }
+
+func TestClientReconnectWithoutConnect(t *testing.T) {
+	t.Parallel()
+
+	runtime := newTestRuntime(t)
+	mm := newMqttMetrics(runtime.VU)
+	logger := runtime.VU.InitEnv().Logger
+
+	runtime.MoveToVUContext(newTestVUState(t))
+
+	client := newTestClient(t, logger, runtime.VU, mm)
+
+	err := runtime.EventLoop.Start(func() error {
+		return client.reconnect()
+	})
+
+	require.Error(t, err)
+
+	require.NoError(t, client.end(nil))
+
+	runtime.EventLoop.WaitOnRegistered()
+}
