@@ -20,7 +20,7 @@ type will struct {
 
 type credentials struct {
 	Username string
-	Password string //nolint:gosec // user-supplied connection credential field, not a hardcoded secret
+	Password string
 }
 
 type clientOptions struct {

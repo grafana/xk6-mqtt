@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	//nolint:forbidigo,gosec // CLI helper tool: argv/stderr access and the usage message are intended
+	//nolint:forbidigo // CLI helper tool: argv/stderr access and the usage message are intended
 	if len(os.Args) == 1 {
 		fmt.Fprintf(os.Stderr, "Usage: %s <command> [args...]\n", os.Args[0])
 		os.Exit(1)
@@ -44,7 +44,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Start the command
-	//nolint:forbidigo,gosec // CLI helper tool: stderr access and the error message are intended
+	//nolint:forbidigo // CLI helper tool: stderr access and the error message are intended
 	if err := cmd.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to start command '%s': %v\n", cmdName, err)
 		os.Exit(1)
