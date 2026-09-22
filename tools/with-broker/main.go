@@ -63,9 +63,7 @@ func main() {
 	err := cmd.Wait()
 	//nolint:forbidigo // CLI helper tool: os.Exit/stderr access is intended
 	if err != nil {
-		var exitError *exec.ExitError
-
-		if errors.As(err, &exitError) {
+		if exitError, ok := errors.AsType[*exec.ExitError](err); ok {
 			// Command exited with non-zero status
 			os.Exit(exitError.ExitCode())
 		}
