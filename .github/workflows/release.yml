@@ -19,7 +19,7 @@ jobs:
   release:
     name: Release
     needs: configure
-    uses: grafana/xk6/.github/workflows/extension-release.yml@91a2daa34184f3481aa29d571a287e1920b1c0dc # v1.4.8
+    uses: grafana/xk6/.github/workflows/extension-release.yml@4f39ba602a7a442b960e84f725d26cc2a9a24326 # v1.4.14
     permissions:
       contents: write
     with:
