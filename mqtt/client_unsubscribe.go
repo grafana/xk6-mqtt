@@ -3,6 +3,7 @@ package mqtt
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/grafana/sobek"
@@ -67,6 +68,13 @@ func (c *client) unsubscribePrepare(
 }
 
 func (c *client) unsubscribeExecute(topics []string, opts *unsubscribeOptions) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	if c.pahoClient == nil {
+		return c.handleError(errNotConnected, "unsubscribe", opts.Tags, "topic", strings.Join(topics, ","))
+	}
+
 	c.log.Debug("Unsubscribing from MQTT topic(s)")
 
 	tokens := make(map[string]paho.Token)

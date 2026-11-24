@@ -38,3 +38,35 @@ func TestClientPublish(t *testing.T) {
 
 	runtime.EventLoop.WaitOnRegistered()
 }
+
+func TestClientExecuteAfterDisconnect(t *testing.T) {
+	t.Parallel()
+
+	runtime := newTestRuntime(t)
+	mm := newMqttMetrics(runtime.VU)
+	logger := runtime.VU.InitEnv().Logger
+
+	runtime.MoveToVUContext(newTestVUState(t))
+
+	client := newTestClient(t, logger, runtime.VU, mm)
+
+	toValue := runtime.VU.Runtime().ToValue
+
+	err := runtime.EventLoop.Start(func() error {
+		require.NoError(t, client.connect(toValue(os.Getenv(broker.EnvBrokerAddress)), nil)) //nolint:forbidigo // test reads the embedded broker address from env
+
+		client.disconnect()
+
+		require.NotPanics(t, func() {
+			require.ErrorContains(t, client.publishExecute("topic", []byte("data"), &publishOptions{}), errNotConnected.Error())
+			require.ErrorContains(t, client.subscribeExecute(map[string]byte{"topic": 0}, &subscribeOptions{}), errNotConnected.Error())
+			require.ErrorContains(t, client.unsubscribeExecute([]string{"topic"}, &unsubscribeOptions{}), errNotConnected.Error())
+		})
+
+		return client.end(nil)
+	})
+
+	require.NoError(t, err)
+
+	runtime.EventLoop.WaitOnRegistered()
+}
