@@ -2,7 +2,10 @@ package mqtt
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
+	"slices"
+	"strings"
 
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/grafana/sobek"
@@ -76,6 +79,12 @@ func (c *client) subscribePrepare(
 func (c *client) subscribeExecute(topics map[string]byte, opts *subscribeOptions) error {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
+
+	if c.pahoClient == nil {
+		names := strings.Join(slices.Sorted(maps.Keys(topics)), ",")
+
+		return c.handleError(errNotConnected, "subscribe", opts.Tags, "topic", names)
+	}
 
 	c.log.Debug("Subscribing to MQTT topic(s)")
 

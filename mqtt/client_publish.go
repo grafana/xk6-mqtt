@@ -77,6 +77,10 @@ func (c *client) publishExecute(topic string, message []byte, opts *publishOptio
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
+	if c.pahoClient == nil {
+		return c.handleError(errNotConnected, "publish", opts.Tags, "topic", topic)
+	}
+
 	c.log.Debug("Publishing message to MQTT broker")
 
 	token := c.pahoClient.Publish(topic, opts.Qos, opts.Retain, message)
