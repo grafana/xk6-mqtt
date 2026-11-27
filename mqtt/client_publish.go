@@ -1,6 +1,7 @@
 package mqtt
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -74,13 +75,32 @@ func (c *client) publishPrepare(
 }
 
 func (c *client) publishExecute(topic string, message []byte, opts *publishOptions) error {
+	// The lock only guards reading the paho client: a QoS 1 or 2 token can stay
+	// pending for as long as the broker is unreachable, and waiting on it while
+	// holding the lock would block end() and disconnect().
 	c.mu.RLock()
-	defer c.mu.RUnlock()
+	pahoClient := c.pahoClient
+	c.mu.RUnlock()
+
+	if pahoClient == nil {
+		return c.handleError(errNotConnected, "publish", opts.Tags, "topic", topic)
+	}
 
 	c.log.Debug("Publishing message to MQTT broker")
 
-	token := c.pahoClient.Publish(topic, opts.Qos, opts.Retain, message)
-	if token.Wait() && token.Error() != nil {
+	token := pahoClient.Publish(topic, opts.Qos, opts.Retain, message)
+
+	ctx := c.vu.Context()
+
+	select {
+	case <-token.Done():
+	case <-ctx.Done():
+		c.log.Debug("VU context done before the publish completed")
+
+		return newMQTTError(context.Cause(ctx), "publish")
+	}
+
+	if token.Error() != nil {
 		if err := c.handleError(token.Error(), "publish", opts.Tags, "topic", topic); err != nil {
 			return err
 		}
